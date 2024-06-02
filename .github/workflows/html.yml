@@ -1,0 +1,31 @@
+name: HTML Validation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Install HTML validator
+      run: npm install -g html-validator-cli
+
+    - name: Validate HTML
+      run: |
+        for file in $(find . -name "*.html"); do
+          html-validator --file=$file --verbose
+        done
+
