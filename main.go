@@ -1,13 +1,22 @@
 package main
 
 import (
-	"fmt"
+	"discardcam/models"
 	"log"
 	"net/http"
 	"text/template"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
 var tmpl = template.Must(template.ParseFiles("static/login.html"))
+
+var jwtKey = []byte("secret_key") // This key should be changed only before runtime to avoid leaks
+
+type Claims struct {
+	Username string `json:"username"`
+	jwt.RegisteredClaims
+}
 
 var users = map[string]string{
 	"user": "email",
@@ -22,10 +31,18 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	email := r.FormValue("email")
 
-	if storedEmail, ok := users[username]; ok && storedEmail == email {
-		fmt.Fprintf(w, "Utilizador Registado!")
-	} else {
-		fmt.Fprintf(w, "Utilizador nao valido")
+	user, err = models.FindUserByUsername(username)
+	if err != nil {
+		user = &models.User{
+			Username: username,
+			Email:    email,
+		}
+		err = models.CreateUser(user)
+	}
+	err = models.CreateUser(user)
+	if err != nil {
+		http.Error(w, "Error Creating User", http.StatusInternalServerError)
+		return
 	}
 }
 
